@@ -38,6 +38,11 @@ ADD https://dist.nuget.org/win-x86-commandline/v4.9.2/nuget.exe C:\nuget\nuget.e
 # Add nuget to PATH
 RUN ["setx", "path", "%PATH%;C:\\nuget"]
 
+## AWSCLI Installation
+# Download AWSCLI
+ADD https://s3.amazonaws.com/aws-cli/AWSCLISetup.exe C:\TEMP\AWSCLISetup.exe
+RUN C:\TEMP\AWSCLISetup.exe 
+
 # Start Windows container with Powershell
 WORKDIR C:\BuildTools
 CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
