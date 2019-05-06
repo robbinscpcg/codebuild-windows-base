@@ -1,6 +1,6 @@
 # escape=`
 
-# Use the latest Windows Server Core image with .NET Framework 4.7.1.
+# Use the latest Windows Server Core image with .NET Framework 4.7.2.
 FROM microsoft/dotnet-framework:4.7.1
 LABEL MAINTAINER=devops@colibrigroup.com 
 
@@ -20,28 +20,26 @@ RUN msiexec /i webdeploy.msi LicenseAccepted="0" ADDLOCAL=ALL /quiet /qn /passiv
 
 ## Visual Studio Build Tools Installation.
 # Download the Build Tools bootstrapper.
-ADD https://aka.ms/vs/15/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
+ADD https://download.microsoft.com/download/E/E/D/EEDF18A8-4AED-4CE0-BEBE-70A83094FC5A/BuildTools_Full.exe C:\TEMP\BuildTools_Full.exe
 
-# Install Build Tools excluding workloads and components with known issues.
-RUN vs_buildtools.exe --quiet --wait --norestart --nocache `
-    --installPath C:\BuildTools `
-    --all `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 `
-    --remove Microsoft.VisualStudio.Component.Windows81SDK `
- || IF "%ERRORLEVEL%"=="3010" EXIT 0
-
-## Nuget Installation
-# Download Nuget
-ADD https://dist.nuget.org/win-x86-commandline/v4.9.2/nuget.exe C:\nuget\nuget.exe
-# Add nuget to PATH
-RUN ["setx", "path", "%PATH%;C:\\nuget"]
+# Install Build Tools.
+RUN C:\TEMP\BuildTools_Full.exe /Silent /Full
 
 ## AWSCLI Installation
 # Download AWSCLI
-ADD https://s3.amazonaws.com/aws-cli/AWSCLISetup.exe C:\TEMP\AWSCLISetup.exe
-RUN C:\TEMP\AWSCLISetup.exe 
+ADD https://s3.amazonaws.com/aws-cli/AWSCLI64PY3.msi C:\TEMP\AWSCLI64PY3.msi
+RUN msiexec /i AWSCLI64PY3.msi LicenseAccepted="0" ADDLOCAL=ALL /quiet /qn /passive /norestart
+
+## AWS PowerShell Installation
+ADD https://sdk-for-net.amazonwebservices.com/latest/AWSToolsAndSDKForNet.msi C:\TEMP\AWS_PS.msi
+RUN msiexec /i AWS_PS.msi LicenseAccepted="0" ADDLOCAL=ALL /quiet /qn /passive /norestart
+
+## Git Installation
+ADD https://github.com/git-for-windows/git/releases/download/v2.21.0.windows.1/Git-2.21.0-64-bit.exe C:\TEMP\Git-2.21.0-64-bit.exe
+RUN Git-2.21.0-64-bit.exe /SILENT /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"
+
+## Correct path(s)
+RUN setx path "%path%;C:\Program Files (x86)\MSBuild\14.0\Bin;C:\Program Files\Amazon\AWSCLI\bin;C:\Program Files (x86)\IIS\Microsoft Web Deploy V3"
 
 # Start Windows container with Powershell
 WORKDIR C:\BuildTools
